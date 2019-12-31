@@ -3,6 +3,7 @@
 
 import urllib
 import random
+from pathlib import Path
 from typing import NamedTuple, Generator
 
 import requests
@@ -24,7 +25,6 @@ class SoupAMTI:
     """Base class for BeautifulSoup parsing"""
 
     def __init__(self, path: str) -> None:
-        self.url = "https://amti.csis.org/"
         self.soup = self._get_soup(path)
 
     @staticmethod
@@ -41,6 +41,24 @@ class SoupAMTI:
             response.raise_for_status()
             return response.content.decode()
 
+    @staticmethod
+    def _get_file(url: str) -> Path:
+        url_path = urllib.parse.urlparse(url).path.strip("/") # type: ignore
+        path = Path(f"assets/{url_path}")
+        if path.exists():
+            return path
+        session = requests.Session()
+        session.headers.update({"User-Agent": "curl/7.67.0"})
+        response = session.get(url, stream=True)
+        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(response)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "wb") as path_fd:
+            for chunk in response:
+                path_fd.write(chunk)
+        return path
+
     def _get_soup(self, path: str) -> bs4.element.Tag:
         html = self._get_html(path)
         return bs4.BeautifulSoup(html, features="lxml").main
@@ -52,15 +70,18 @@ class Island(SoupAMTI):
     Coordinates = NamedTuple("Coordinates", [("lat", float), ("long", float)])
 
     def __init__(self, title: str, names: dict, img_url: str, url: str) -> None:
-        self.title = title
-        self.names = names
-        self.img_url = img_url
         url_path = urllib.parse.urlparse(url).path.strip("/") # type: ignore
         super().__init__(url_path)
+
         tracker_info = self._tracker_info()
+        gps = tracker_info["GPS"].split(", ")
+
+        self.title = title
+        self.names = names
+        self.img_file = self._get_file(img_url)
+
         self.occupier = tracker_info.get("Occupied by")
         self.legal_status = tracker_info.get("Legal Status")
-        gps = tracker_info["GPS"].split(", ")
         self.geo = self.Coordinates(deg_to_decimal(gps[0]),
                                     deg_to_decimal(gps[1]))
 

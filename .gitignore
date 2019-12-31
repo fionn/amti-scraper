@@ -1,4 +1,5 @@
 *.html
+*.jpg
 tags
 venv/
 .mypy_cache/
