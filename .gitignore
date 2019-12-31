@@ -1,0 +1,4 @@
+*.html
+tags
+venv/
+.mypy_cache/
