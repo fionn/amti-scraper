@@ -1,4 +1,4 @@
-SRC = src/
+SRC = amti/
 VENV ?= venv
 
 $(VENV): requirements.txt
@@ -9,6 +9,15 @@ $(VENV): requirements.txt
 .PHONY: test
 test:
 	@python $(SRC)/test.py
+
+.PHONY: install
+install: requirements.txt $(SRC)
+	@pip install --user --require-hashes -r $<
+	@pip install --user --no-deps .
+
+.PHONY: install_dev
+install_dev: venv
+	@source $(VENV)/bin/activate && pip install -e .[dev]
 
 tags: $(SRC)
 	@ctags --languages=python --python-kinds=-i -R $(SRC)
