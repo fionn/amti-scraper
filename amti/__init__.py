@@ -1,7 +1,5 @@
 """Metadata for setup"""
 
-from .amti import Island, AMTI
-
 name = "amti-islands" # pylint: disable=invalid-name
 
 __title__ = name
