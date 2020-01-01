@@ -76,14 +76,20 @@ class Island(SoupAMTI):
         tracker_info = self._tracker_info()
         gps = tracker_info["GPS"].split(", ")
 
+        self.url = url
         self.title = title
         self.names = names
-        self.img_file = self._get_file(img_url)
+        self._img_url = img_url
 
         self.occupier = tracker_info.get("Occupied by")
         self.legal_status = tracker_info.get("Legal Status")
         self.geo = self.Coordinates(deg_to_decimal(gps[0]),
                                     deg_to_decimal(gps[1]))
+
+    @property
+    def img_file(self) -> Path:
+        """Local path to satellite image"""
+        return self._get_file(self._img_url)
 
     def __repr__(self) -> str:
         return f"Island({self.title})"
