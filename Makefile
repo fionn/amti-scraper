@@ -3,12 +3,8 @@ VENV ?= venv
 
 $(VENV): requirements.txt
 	@python -m venv $@ --prompt $@::amti
-	@source $@/bin/activate && pip install -r $<
+	@source $@/bin/activate && pip --disable-pip-version-check install -r $<
 	@echo "Enter virtual environment: source venv/bin/activate"
-
-.PHONY: test
-test:
-	@python $(SRC)/test.py
 
 .PHONY: install
 install: requirements.txt $(SRC)
