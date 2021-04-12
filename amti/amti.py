@@ -92,7 +92,7 @@ class Island(SoupAMTI):
         return self._get_file(self._img_url)
 
     def __repr__(self) -> str:
-        return f"Island({self.title})"
+        return f"<Island({self.title})>"
 
     def _tracker_info(self) -> dict:
         data_output = self.soup.article.header.find("div",
