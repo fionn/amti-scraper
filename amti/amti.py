@@ -30,7 +30,7 @@ class SoupAMTI:
     @staticmethod
     def _get_html(path: str) -> str:
         try:
-            with open(f"assets/{path}.html") as amti_cn_fd:
+            with open(f"assets/{path}.html", encoding="utf8") as amti_cn_fd:
                 html = amti_cn_fd.read()
             return html
         except FileNotFoundError:
