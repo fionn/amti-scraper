@@ -1,9 +1,11 @@
 SRC = amti/
 VENV ?= venv
 
-$(VENV): requirements.txt
+export PIP_DISABLE_PIP_VERSION_CHECK=1
+
+$(VENV): requirements.txt requirements_dev.txt
 	@python -m venv $@ --prompt $@::amti
-	@source $@/bin/activate && pip --disable-pip-version-check install -r $<
+	@source $@/bin/activate && pip install -r $< -r requirements_dev.txt
 	@echo "Enter virtual environment: source venv/bin/activate"
 
 .PHONY: install
@@ -14,6 +16,9 @@ install: requirements.txt $(SRC)
 .PHONY: install_dev
 install_dev: venv
 	@source $(VENV)/bin/activate && pip install -e .[dev]
+
+build: $(SRC)
+	@python -m build
 
 tags: $(SRC)
 	@ctags --languages=python --python-kinds=-i -R $(SRC)
