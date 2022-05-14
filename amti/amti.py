@@ -25,31 +25,27 @@ class SoupAMTI:
     """Base class for BeautifulSoup parsing"""
 
     def __init__(self, path: str) -> None:
-        self.soup = self._get_soup(path)
+        self._session = requests.Session()
+        self._session.headers.update({"User-Agent": "curl/7.83.1"})
+        self._soup = self._get_soup(path)
 
-    @staticmethod
-    def _get_html(path: str) -> str:
+    def _get_html(self, path: str) -> str:
         try:
             with open(f"assets/{path}.html", encoding="utf8") as amti_cn_fd:
                 html = amti_cn_fd.read()
             return html
         except FileNotFoundError:
             url = f"https://amti.csis.org/{path}/"
-            session = requests.Session()
-            session.headers.update({"User-Agent": "curl/7.67.0"})
-            response = session.get(url)
+            response = self._session.get(url)
             response.raise_for_status()
             return response.content.decode()
 
-    @staticmethod
-    def _get_file(url: str) -> Path:
+    def _get_file(self, url: str) -> Path:
         url_path = urllib.parse.urlparse(url).path.strip("/") # type: ignore
         path = Path(f"assets/{url_path}")
         if path.exists():
             return path
-        session = requests.Session()
-        session.headers.update({"User-Agent": "curl/7.67.0"})
-        response = session.get(url, stream=True)
+        response = self._session.get(url, stream=True)
         response.raise_for_status()
         if response.status_code != 200:
             raise Exception(response)
@@ -95,8 +91,8 @@ class Island(SoupAMTI):
         return f"<Island({self.title})>"
 
     def _tracker_info(self) -> dict:
-        data_output = self.soup.article.header.find("div",
-                                                    attrs={"id": "data-output"})
+        data_output = self._soup.article.header.find("div",
+                                                     attrs={"id": "data-output"})
         tracker_info = data_output.find("div", attrs={"id": "tracker-info"}) \
                        .find_all("div", attrs={"class": None})
         tracker_info_dict = {}
@@ -108,10 +104,10 @@ class Island(SoupAMTI):
 class AMTI(SoupAMTI):
     """Wrapper for calling AMTI"""
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str = "island-tracker/china") -> None:
         super().__init__(path)
-        self._articles = self.soup.find_all("article",
-                                            attrs={"class": "island-tracker"})
+        self._articles = self._soup.find_all("article",
+                                             attrs={"class": "island-tracker"})
 
     def islands(self) -> Generator[Island, None, None]:
         """Island generator"""
@@ -138,7 +134,7 @@ class AMTI(SoupAMTI):
 
 def main() -> None:
     """Entry point"""
-    amti = AMTI("island-tracker/china")
+    amti = AMTI()
 
     for island in amti.islands():
         print(island)
